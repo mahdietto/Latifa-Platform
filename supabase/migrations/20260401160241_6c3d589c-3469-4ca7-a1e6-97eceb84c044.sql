@@ -1,0 +1,2 @@
+ALTER TABLE public.fable_games DROP CONSTRAINT fable_games_game_type_check;
+ALTER TABLE public.fable_games ADD CONSTRAINT fable_games_game_type_check CHECK (game_type = ANY (ARRAY['image_word_match','fill_blanks','memory_cards','true_false','crossword','paragraph_order','mcq']));

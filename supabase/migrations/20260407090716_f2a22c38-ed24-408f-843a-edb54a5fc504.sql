@@ -1,0 +1,1 @@
+ALTER TABLE public.fables ADD COLUMN theme text NOT NULL DEFAULT '';
