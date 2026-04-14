@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -6,16 +6,29 @@ import FableCard from "@/components/FableCard";
 import { useFables } from "@/data/fables";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudentProgress } from "@/hooks/use-student-progress";
-import { CheckCircle2, Search, Star, Plus, X } from "lucide-react";
+import { CheckCircle2, Search, Star, Plus, X, ChevronDown } from "lucide-react";
 import FableFormModal from "@/components/FableFormModal";
 import HistoryView from "@/components/HistoryView";
 import LeaderboardView from "@/components/LeaderboardView";
 import { buildThemeOptions, normalizeThemeValue } from "@/data/themes";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { buildOriginOptions, getCustomOrigins, getFableOriginMap, getHiddenOrigins, normalizeOriginValue, setCustomOrigins, setHiddenOrigins } from "@/data/origins";
 
 type SubView = "library" | "history" | "leaderboard";
+
+type DropdownOption = { value: string; label: string };
+
+function useOutsideClose(ref: React.RefObject<HTMLElement>, onClose: () => void, enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) onClose();
+    };
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    return () => window.removeEventListener("pointerdown", onDown);
+  }, [enabled, onClose, ref]);
+}
 
 const Index = () => {
   const navigate = useNavigate();
@@ -34,6 +47,36 @@ const Index = () => {
   const { fables, refetch } = useFables();
   const { user, isAdmin } = useAuth();
   const { allProgress } = useStudentProgress();
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [originOpen, setOriginOpen] = useState(false);
+  const themeRef = useRef<HTMLDivElement>(null);
+  const originRef = useRef<HTMLDivElement>(null);
+
+  // #region agent log
+  const __dbg = (hypothesisId: string, message: string, data: Record<string, unknown>) => {
+    fetch('http://127.0.0.1:7421/ingest/c6053bea-9487-4841-81bf-5bdbee3fc35f',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'949dc9'},body:JSON.stringify({sessionId:'949dc9',runId:'pre-fix',hypothesisId,location:'src/pages/Index.tsx',message,data,timestamp:Date.now()})}).catch(()=>{});
+  };
+  const __measureLayout = () => {
+    const de = document.documentElement;
+    const body = document.body;
+    const sel = window.getSelection?.();
+    return {
+      innerWidth: window.innerWidth,
+      clientWidth: de.clientWidth,
+      scrollbarWidth: window.innerWidth - de.clientWidth,
+      scrollY: window.scrollY,
+      bodyOverflow: getComputedStyle(body).overflow,
+      bodyPaddingRight: getComputedStyle(body).paddingRight,
+      htmlOverflow: getComputedStyle(de).overflow,
+      selectionLen: sel?.toString?.().length ?? 0,
+      activeTag: (document.activeElement as HTMLElement | null)?.tagName ?? null,
+    };
+  };
+  // #endregion agent log
+
+  // Close dropdowns on outside interaction
+  useOutsideClose(themeRef, () => setThemeOpen(false), themeOpen);
+  useOutsideClose(originRef, () => setOriginOpen(false), originOpen);
 
   useEffect(() => {
     const stored = localStorage.getItem("custom_fable_themes");
@@ -161,8 +204,8 @@ const Index = () => {
               </div>
             )}
 
-            <div className="max-w-5xl mx-auto mb-8">
-              <div className="flex flex-col md:flex-row md:items-stretch overflow-hidden rounded-[2rem] border border-border/55 bg-card/82 backdrop-blur-md shadow-sm ring-1 ring-black/[0.04]">
+            <div className="max-w-5xl mx-auto mb-8 relative z-30">
+              <div className="flex flex-col md:flex-row md:items-stretch rounded-[2rem] border border-border/55 bg-card/82 backdrop-blur-md shadow-sm ring-1 ring-black/[0.04]">
                 <div className="relative min-w-0 flex-1">
                   <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
@@ -182,50 +225,126 @@ const Index = () => {
 
                 <div className="h-px bg-border/50 md:h-auto md:w-px" />
 
-                <div className="p-2 md:p-0 md:w-[13.5rem]">
-                  <Select
-                    modal={false}
-                    value={selectedTheme || "__all__"}
-                    onValueChange={(v) => setSelectedTheme(v === "__all__" ? "" : v)}
+                <div ref={themeRef} className="relative p-2 md:p-0 md:w-[13.5rem]">
+                  <button
+                    type="button"
+                    className="flex h-12 w-full items-center justify-between rounded-xl border-0 bg-transparent px-3 font-body text-sm font-semibold text-foreground outline-none select-none focus:outline-none md:h-14"
+                    onPointerDown={() => {
+                      window.getSelection?.()?.removeAllRanges?.();
+                      // #region agent log
+                      __dbg("H2_selection", "theme:onPointerDown", __measureLayout());
+                      // #endregion agent log
+                    }}
+                    onClick={() => {
+                      const next = !themeOpen;
+                      setThemeOpen(next);
+                      // #region agent log
+                      __dbg("H1_scroll_lock", "theme:toggle", { open: next, ...__measureLayout() });
+                      // #endregion agent log
+                    }}
                   >
-                    <SelectTrigger className="h-12 w-full rounded-xl border-0 bg-transparent font-body text-sm font-semibold focus:ring-2 focus:ring-primary/25 md:h-14">
-                      <SelectValue placeholder="Tous les thèmes" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border border-white/20 bg-white/10 text-white shadow-[0_18px_60px_-18px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
-                      <SelectItem value="__all__" className="focus:bg-white/15 focus:text-white">
-                        Tous les thèmes
-                      </SelectItem>
-                      {visibleThemeOptions.map((t) => (
-                        <SelectItem key={t.value} value={t.value} className="focus:bg-white/15 focus:text-white">
-                          {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <span className="truncate">
+                      {selectedTheme
+                        ? (visibleThemeOptions.find((t) => t.value === selectedTheme)?.label ?? "Tous les thèmes")
+                        : "Tous les thèmes"}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 opacity-70 transition-transform ${themeOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {themeOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        transition={{ duration: 0.16 }}
+                        className="absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border/55 bg-card/82 text-foreground shadow-[0_18px_60px_-18px_rgba(0,0,0,0.35)] ring-1 ring-black/[0.06] backdrop-blur-[96px] backdrop-saturate-200 backdrop-brightness-75"
+                      >
+                        <div className="max-h-72 overflow-auto p-1">
+                          {([{ value: "", label: "Tous les thèmes" }, ...visibleThemeOptions] as DropdownOption[]).map((opt) => (
+                            <button
+                              key={opt.value || "__all__"}
+                              type="button"
+                              className={`w-full rounded-xl px-3 py-2 text-left text-sm font-body font-semibold transition-colors hover:bg-muted/50 ${
+                                (opt.value === "" ? selectedTheme === "" : selectedTheme === opt.value) ? "bg-muted/50" : ""
+                              }`}
+                              onClick={() => {
+                                setSelectedTheme(opt.value);
+                                setThemeOpen(false);
+                                // #region agent log
+                                __dbg("H1_scroll_lock", "theme:select", { value: opt.value, ...__measureLayout() });
+                                // #endregion agent log
+                              }}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="h-px bg-border/50 md:h-auto md:w-px" />
 
-                <div className="p-2 pt-0 md:p-0 md:w-[14.5rem]">
-                  <Select
-                    modal={false}
-                    value={selectedOrigin || "__all__"}
-                    onValueChange={(v) => setSelectedOrigin(v === "__all__" ? "" : v)}
+                <div ref={originRef} className="relative p-2 pt-0 md:p-0 md:w-[14.5rem]">
+                  <button
+                    type="button"
+                    className="flex h-12 w-full items-center justify-between rounded-xl border-0 bg-transparent px-3 font-body text-sm font-semibold text-foreground outline-none select-none focus:outline-none md:h-14"
+                    onPointerDown={() => {
+                      window.getSelection?.()?.removeAllRanges?.();
+                      // #region agent log
+                      __dbg("H2_selection", "origin:onPointerDown", __measureLayout());
+                      // #endregion agent log
+                    }}
+                    onClick={() => {
+                      const next = !originOpen;
+                      setOriginOpen(next);
+                      // #region agent log
+                      __dbg("H1_scroll_lock", "origin:toggle", { open: next, ...__measureLayout() });
+                      // #endregion agent log
+                    }}
                   >
-                    <SelectTrigger className="h-12 w-full rounded-xl border-0 bg-transparent font-body text-sm font-semibold focus:ring-2 focus:ring-primary/25 md:h-14">
-                      <SelectValue placeholder="Toutes les origines" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border border-white/20 bg-white/10 text-white shadow-[0_18px_60px_-18px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
-                      <SelectItem value="__all__" className="focus:bg-white/15 focus:text-white">
-                        Toutes les origines
-                      </SelectItem>
-                      {originOptions.map((o) => (
-                        <SelectItem key={o.value} value={o.value} className="focus:bg-white/15 focus:text-white">
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <span className="truncate">
+                      {selectedOrigin
+                        ? (originOptions.find((o) => o.value === selectedOrigin)?.label ?? "Toutes les origines")
+                        : "Toutes les origines"}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 opacity-70 transition-transform ${originOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {originOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        transition={{ duration: 0.16 }}
+                        className="absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border/55 bg-card/82 text-foreground shadow-[0_18px_60px_-18px_rgba(0,0,0,0.35)] ring-1 ring-black/[0.06] backdrop-blur-[96px] backdrop-saturate-200 backdrop-brightness-75"
+                      >
+                        <div className="max-h-72 overflow-auto p-1">
+                          {([{ value: "", label: "Toutes les origines" }, ...originOptions] as DropdownOption[]).map((opt) => (
+                            <button
+                              key={opt.value || "__all__"}
+                              type="button"
+                              className={`w-full rounded-xl px-3 py-2 text-left text-sm font-body font-semibold transition-colors hover:bg-muted/50 ${
+                                (opt.value === "" ? selectedOrigin === "" : selectedOrigin === opt.value) ? "bg-muted/50" : ""
+                              }`}
+                              onClick={() => {
+                                setSelectedOrigin(opt.value);
+                                setOriginOpen(false);
+                                // #region agent log
+                                __dbg("H1_scroll_lock", "origin:select", { value: opt.value, ...__measureLayout() });
+                                // #endregion agent log
+                              }}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>

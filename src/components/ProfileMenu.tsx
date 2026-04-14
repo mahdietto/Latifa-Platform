@@ -59,10 +59,10 @@ const ProfileMenu = ({ onNavigate }: ProfileMenuProps) => {
   return (
     <div className="flex items-center gap-3">
       <div
-        className="flex items-center gap-1.5 rounded-full border-2 border-amber-400/80 bg-black/50 px-3 py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.45)] backdrop-blur-md"
+        className="flex items-center gap-1.5 rounded-full border-2 border-pink-400/80 bg-black/50 px-3 py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.45)] backdrop-blur-md"
         title="Étoiles collectées"
       >
-        <Star className="h-5 w-5 shrink-0 fill-amber-400 text-amber-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+        <Star className="h-5 w-5 shrink-0 fill-pink-400 text-pink-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
         <motion.span
           key={displayStars}
           initial={{ y: -8, opacity: 0 }}

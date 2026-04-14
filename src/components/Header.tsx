@@ -17,7 +17,7 @@ const SCROLL_DELTA = 8;
 const navLinkBase =
   "rounded-lg px-2.5 py-1.5 text-[15px] font-body font-semibold tracking-wide text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)] transition-all duration-200 hover:bg-white/15 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.28),0_6px_20px_-4px_rgba(0,0,0,0.35)] hover:-translate-y-px active:translate-y-0 active:bg-white/10";
 const navLinkActive =
-  "bg-white/12 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.35)] drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] underline decoration-2 underline-offset-8 decoration-amber-300/90";
+  "bg-white/12 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.35)] drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] underline decoration-2 underline-offset-8 decoration-pink-400/90";
 
 const Header = ({ onNavigate }: HeaderProps) => {
   const { user, isAdmin } = useAuth();
@@ -63,9 +63,9 @@ const Header = ({ onNavigate }: HeaderProps) => {
     >
       <div className="px-5 sm:px-6 h-14 flex items-center justify-between">
         <Link to="/library" className="flex items-center gap-2">
-          <BookOpen className="h-7 w-7 text-amber-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]" />
+          <BookOpen className="h-7 w-7 text-pink-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]" />
           <h1 className="font-display text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.75)]">
-            Latifa <span className="text-amber-200">Platform</span>
+            Latifa <span className="text-pink-400">Platform</span>
           </h1>
         </Link>
 
@@ -93,7 +93,7 @@ const Header = ({ onNavigate }: HeaderProps) => {
           {isAdmin && (
             <Link
               to="/admin"
-              className={`flex items-center gap-2 ${navLinkBase} ${location.pathname === "/admin" ? `${navLinkActive} decoration-amber-200/90` : ""}`}
+              className={`flex items-center gap-2 ${navLinkBase} ${location.pathname === "/admin" ? `${navLinkActive} decoration-pink-400/90` : ""}`}
             >
               <Crown className="h-[1.1rem] w-[1.1rem] text-amber-200/95" />
               Admin
